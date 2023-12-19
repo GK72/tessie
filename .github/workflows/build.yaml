@@ -1,0 +1,19 @@
+name: Check
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dependencies
+        run: |
+          python3 -m pip install mypy pylint
+
+      - name: Check
+        run: |
+          ${{github.workspace}}/ci/check.sh
