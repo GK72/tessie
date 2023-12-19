@@ -16,4 +16,5 @@ jobs:
 
       - name: Check
         run: |
+          ls -al .
           ci/check.sh
