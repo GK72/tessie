@@ -16,4 +16,4 @@ jobs:
 
       - name: Check
         run: |
-          ${{github.workspace}}/ci/check.sh
+          ci/check.sh
