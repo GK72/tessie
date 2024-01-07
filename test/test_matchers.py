@@ -1,13 +1,13 @@
 import tools
 
 def run_test(test_args: dict):
-    tools.file_contains_pattern("res/nonexistent.txt", ".*3\.14.*", verbose=True)
+    tools.file_match(".*3\.14.*", "res/nonexistent.txt", verbose=True)
 
-    tools.file_contains_pattern("res/test-output.txt", ".*3\.14.*", verbose=True)
-    tools.file_contains_line("res/test-output.txt", "Lorem ipsum dolor sit amet", verbose=True)
+    tools.file_match(".*3\.14.*", "res/test-output.txt", verbose=True)
+    tools.file_contains_line("Lorem ipsum dolor sit amet", "res/test-output.txt", verbose=True)
 
-    tools.file_contains_pattern("res/test-output.txt", ".* bla .*", verbose=True)
-    tools.file_contains_line("res/test-output.txt", "Lorem ipsum", verbose=True)
+    tools.file_match(".* bla .*", "res/test-output.txt", verbose=True)
+    tools.file_contains_line("Lorem ipsum", "res/test-output.txt", verbose=True)
 
     tools.expect_eq(2, 2)
     tools.expect_eq(2, 4)

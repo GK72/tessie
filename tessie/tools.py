@@ -6,14 +6,20 @@ import subprocess
 
 from typing import (
     Any,
-    Callable,
-    List,
+    Dict,
     Optional,
     Tuple,
     Union,
 )
 
+import docker
+
 import internal
+
+
+def docker_client() -> docker.DockerClient:
+    """ Convenience function to get Docker client """
+    return docker.from_env()
 
 
 def exec_command(
@@ -46,6 +52,18 @@ def exec_command(
         process.terminate()
 
     return process
+
+
+def start_container(
+        image: str,
+        ports: Optional[Dict[str, int]] = None
+) -> docker.models.containers.Container:
+    """ Wrapper around `docker.containers.run(...)`
+
+    :ports:  map ports to host ports
+             container port must be given in `port/protocol` format, i.e. "8080/tcp"
+    """
+    return docker_client().containers.run(image, auto_remove=True, detach=True, ports=ports)
 
 
 def send_tcp(address: str, data: Union[bytes, str], expect_answer: bool = True) -> Optional[bytes]:
@@ -81,52 +99,59 @@ def expect_gt(lhs: Any, rhs: Any) -> bool:
 # TODO(feat): implement the rest of the combination of `expect_` functions
 
 
-def check_file(path: str, func: Callable[[List[str]], bool]) -> Tuple[bool, str]:
-    """ Checks the content of a file according to `func`
-
-    `func` receives the lines stripped of leading and trailing whitespace of
-    the file as a list
-    """
-
-    try:
-        with open(path, "r", encoding="utf-8") as inf:
-            lines = inf.readlines()
-            success = func(list(map(lambda x: x.strip(), lines)))
-            return (success, "".join(lines))
-    except FileNotFoundError as ex:
-        internal.log_failure(str(ex), "Exception")
-        return (False, "")
-
-
-def file_contains_pattern(path: str, pattern: str, verbose: bool = False) -> bool:
-    """ Checks whether the file contains a `pattern` given by regex """
-    # TODO(feat): decouple from file, it should work with simple strings
-    log_args = {
-        "message": pattern,
-        "matcher": "File line pattern",
-        "additional_message": path
-    }
-
-    success, content = check_file(
-        path,
-        lambda lines: any(map(lambda line: re.match(pattern, line) is not None, lines))
+def match(
+    pattern: str,
+    content: str,
+    verbose: bool = False,
+    matcher: str = "String matcher",
+    **kwargs: Any
+) -> bool:
+    """ Check for match on any line in a given content """
+    return internal.test_expectation(
+        internal.check_str(content, lambda line: re.match(pattern, line) is not None),
+        content=content,
+        message=pattern,
+        verbose=verbose,
+        matcher=matcher,
+        **kwargs
     )
 
-    return internal.test_file_exceptation(success, content, verbose, **log_args)
 
-
-def file_contains_line(path: str, pattern: str, verbose: bool = False) -> bool:
-    """ Checks whether the file contains a given line """
-    # TODO(feat): decouple from file, it should work with simple strings
-    log_args = {
-        "message": pattern,
-        "matcher": "File exact line",
-        "additional_message": path
-    }
-
-    success, content = check_file(
-        path,
-        lambda lines: any(map(lambda line: pattern == line, lines))
+def contains_line(
+    what: str,
+    content: Union[str, bytes],
+    verbose: bool = False,
+    matcher: str = "String contains line",
+    **kwargs: Any
+) -> bool:
+    """ Check for exact line in a given content """
+    return internal.test_expectation(
+        internal.check_str(content, lambda line: what == line),
+        content=content,
+        message=what,
+        verbose=verbose,
+        matcher=matcher,
+        **kwargs
     )
 
-    return internal.test_file_exceptation(success, content, verbose, **log_args)
+
+def file_match(pattern: str, path: str, verbose: bool = False) -> bool:
+    """ Check for match on any line in a given file """
+    return match(
+        pattern,
+        internal.readfile(path),
+        verbose,
+        additional_message=path,
+        matcher="File line matcher"
+    )
+
+
+def file_contains_line(pattern: str, path: str, verbose: bool = False) -> bool:
+    """ Check for exact line in a given file """
+    return contains_line(
+        pattern,
+        internal.readfile(path),
+        verbose,
+        additional_message=path,
+        matcher="File exact line"
+    )
