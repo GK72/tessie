@@ -7,18 +7,14 @@ on:
     branches: [ main ]
 
 jobs:
-  lint:
+  main:
     runs-on: ubuntu-latest
     steps:
       - name: Dependencies
         run: python3 -m pip install mypy pylint
       - name: Check-out
         uses: actions/checkout@v4
-      - name: Check
+      - name: Lint
         run: ${{github.workspace}}/ci/check.sh
-
-  regression-test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: run
+      - name: Regression Test
         run: ${{github.workspace}}/test/regression-test.sh
