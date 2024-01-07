@@ -1,13 +1,13 @@
 """ Various tools for running tests """
 
 import re
-import shlex
 import socket
 import subprocess
 
 from typing import (
     Any,
     Callable,
+    List,
     Optional,
     Tuple,
     Union,
@@ -37,32 +37,18 @@ def exec_command(
         if not background:
             raise RuntimeError("Cannot write output to file unless the process runs in background")
 
-        is_file_output = True
-        outf = open(output, "w")
-    else:
-        is_file_output = False
-
     try:
-        process = subprocess.Popen(                                                                 # pylint: disable=R1732,C0301 # caller should close the process in case of running it in background
-            shlex.split(command),
-            text=True,
-            shell=shell,
-            stdout=outf if is_file_output else output,
-            stderr=outf if is_file_output else output
-        )
+        process = internal.exec_command(command, output, shell)
 
         if not background:
             return process.communicate()
     except KeyboardInterrupt:
         process.terminate()
-    finally:
-        if is_file_output:
-            outf.close()
 
     return process
 
 
-def send_tcp(address: str, data: Union[bytes, str], expect_answer=True) -> Optional[bytes]:
+def send_tcp(address: str, data: Union[bytes, str], expect_answer: bool = True) -> Optional[bytes]:
     """ Send data to an address via TCP
 
     :address:   must be given in a format like 'localhost:8000'
@@ -76,7 +62,7 @@ def send_tcp(address: str, data: Union[bytes, str], expect_answer=True) -> Optio
         client_socket.connect(server_address)
         client_socket.sendall(data.encode() if isinstance(data, str) else data)
         if not expect_answer:
-            return
+            return None
         return client_socket.recv(1024)
     finally:
         client_socket.close()
@@ -95,7 +81,7 @@ def expect_gt(lhs: Any, rhs: Any) -> bool:
 # TODO(feat): implement the rest of the combination of `expect_` functions
 
 
-def check_file(path: str, func: Callable) -> (bool, str):
+def check_file(path: str, func: Callable[[List[str]], bool]) -> Tuple[bool, str]:
     """ Checks the content of a file according to `func`
 
     `func` receives the lines stripped of leading and trailing whitespace of
@@ -103,16 +89,18 @@ def check_file(path: str, func: Callable) -> (bool, str):
     """
 
     try:
-        with open(path, "r") as inf:
+        with open(path, "r", encoding="utf-8") as inf:
             lines = inf.readlines()
             success = func(list(map(lambda x: x.strip(), lines)))
-            return (success, lines)
-    except FileNotFoundError as e:
-        internal.log_failure(e, "Exception")
+            return (success, "".join(lines))
+    except FileNotFoundError as ex:
+        internal.log_failure(str(ex), "Exception")
         return (False, "")
 
 
-def file_contains_pattern(path: str, pattern: str, verbose=False) -> bool:
+def file_contains_pattern(path: str, pattern: str, verbose: bool = False) -> bool:
+    """ Checks whether the file contains a `pattern` given by regex """
+    # TODO(feat): decouple from file, it should work with simple strings
     log_args = {
         "message": pattern,
         "matcher": "File line pattern",
@@ -127,7 +115,9 @@ def file_contains_pattern(path: str, pattern: str, verbose=False) -> bool:
     return internal.test_file_exceptation(success, content, verbose, **log_args)
 
 
-def file_contains_line(path: str, pattern: str, verbose=False) -> bool:
+def file_contains_line(path: str, pattern: str, verbose: bool = False) -> bool:
+    """ Checks whether the file contains a given line """
+    # TODO(feat): decouple from file, it should work with simple strings
     log_args = {
         "message": pattern,
         "matcher": "File exact line",
@@ -140,7 +130,3 @@ def file_contains_line(path: str, pattern: str, verbose=False) -> bool:
     )
 
     return internal.test_file_exceptation(success, content, verbose, **log_args)
-
-
-if __name__ == "__main__":
-    main()
