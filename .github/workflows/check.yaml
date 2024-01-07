@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Dependencies
-        run: python3 -m pip install mypy pylint
+        run: python3 -m pip install mypy pylint docker
       - name: Check-out
         uses: actions/checkout@v4
       - name: Lint
