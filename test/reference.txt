@@ -1,0 +1,18 @@
+[31;20m[FAILED][0m [35;20mException[0m [37;1m[Errno 2] No such file or directory: 'test/nonexistent.txt'[0m   [30;1m[0m
+[31;20m[FAILED][0m [35;20mFile line matcher[0m [37;1m.*3\.14.*[0m   [30;1mtest/nonexistent.txt[0m
+[32;20m[  OK  ][0m [35;20mFile line matcher[0m [37;1m.*3\.14.*[0m   [30;1mtest/input.txt[0m
+[32;20m[  OK  ][0m [35;20mFile exact line[0m [37;1mLorem ipsum dolor sit amet[0m   [30;1mtest/input.txt[0m
+[31;20m[FAILED][0m [35;20mFile line matcher[0m [37;1m.* bla .*[0m   [30;1mtest/input.txt
+Lorem ipsum dolor sit amet
+[2024-01-06 16:32:00] INFO: 3.14//Rsqrt-1
+[2024-01-06 16:33:00] ERROR: libazsir
+[0m
+[31;20m[FAILED][0m [35;20mFile exact line[0m [37;1mLorem ipsum[0m   [30;1mtest/input.txt
+Lorem ipsum dolor sit amet
+[2024-01-06 16:32:00] INFO: 3.14//Rsqrt-1
+[2024-01-06 16:33:00] ERROR: libazsir
+[0m
+[32;20m[  OK  ][0m [35;20m[0m [37;1m2 == 2[0m   [30;1m[0m
+[31;20m[FAILED][0m [35;20m[0m [37;1m2 == 4[0m   [30;1m[0m
+[31;20m[FAILED][0m [35;20m[0m [37;1m2 > 2[0m   [30;1m[0m
+[32;20m[  OK  ][0m [35;20m[0m [37;1m5 > 4[0m   [30;1m[0m
