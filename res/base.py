@@ -33,5 +33,5 @@ def run_test(test_args: dict):
     result = send_request(args.port)
     server.terminate()
 
-    if not tools.check(result[0].strip(), "Hello, Tessie!"):
+    if not tools.expect_eq(result[0].strip(), "Hello, Tessie!"):
         print(result[1])

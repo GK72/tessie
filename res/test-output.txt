@@ -1,0 +1,3 @@
+Lorem ipsum dolor sit amet
+[2024-01-06 16:32:00] INFO: 3.14//Rsqrt-1
+[2024-01-06 16:33:00] ERROR: libazsir
