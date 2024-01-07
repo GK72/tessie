@@ -2,6 +2,7 @@
 
 import shlex
 import subprocess
+import time
 
 from enum import Enum
 
@@ -14,17 +15,37 @@ from typing import (
 
 class AnsiColors(Enum):
     """ ANSI escape codes for colors """
-    DARK_GREY = "\x1b[30;1m"
-    RED       = "\x1b[31;20m"
-    BOLD_RED  = "\x1b[31;1m"
-    GREEN     = "\x1b[32;20m"
-    YELLOW    = "\x1b[33;20m"
-    BLUE      = "\x1b[34;20m"
-    PURPLE    = "\x1b[35;20m"
-    CYAN      = "\x1b[36;20m"
-    WHITE     = "\x1b[37;1m"
-    GREY      = "\x1b[38;20m"
-    DEFAULT   = "\x1b[0m"
+    DARK_GREY   = "\x1b[30;1m"
+    RED         = "\x1b[31;20m"
+    BOLD_RED    = "\x1b[31;1m"
+    BOLD_GREEN  = "\x1b[1;32m"
+    GREEN       = "\x1b[32;20m"
+    YELLOW      = "\x1b[33;20m"
+    BLUE        = "\x1b[34;20m"
+    BOLD_BLUE   = "\x1b[1;34m"
+    PURPLE      = "\x1b[35;20m"
+    CYAN        = "\x1b[36;20m"
+    WHITE       = "\x1b[37;1m"
+    GREY        = "\x1b[38;20m"
+    DEFAULT     = "\x1b[0m"
+
+
+class StopWatch:
+    """ A simple stopwatch """
+
+    def __init__(self) -> None:
+        """ Create a stopwatch without initializing its internal clock """
+        self._clock: float = 0.0
+
+    def start(self) -> None:
+        """ Start the stopwatch """
+        self._clock = time.time()
+
+    def stop(self) -> float:
+        """ Stop the stopwatch and return the elapsed time in seconds """
+        if self._clock == 0.0:
+            raise RuntimeError("Stopwatch has not been started")
+        return time.time() - self._clock
 
 
 def colorize(color: str, message: str) -> str:
