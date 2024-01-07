@@ -153,5 +153,5 @@ def file_contains_line(pattern: str, path: str, verbose: bool = False) -> bool:
         internal.readfile(path),
         verbose,
         additional_message=path,
-        matcher="File exact line"
+        matcher="File contains line"
     )
