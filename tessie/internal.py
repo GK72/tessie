@@ -7,6 +7,7 @@ from enum import Enum
 
 from typing import (
     Any,
+    Callable,
     Union
 )
 
@@ -31,7 +32,12 @@ def colorize(color: str, message: str) -> str:
     return f"{color}{message}{AnsiColors.DEFAULT.value}"
 
 
-def log_success(message: str, matcher: str = "", additional_message: str = "") -> None:
+def log_success(
+        message: str,
+        matcher: str = "",
+        additional_message: str = "",
+        **_: Any
+) -> None:
     """ Log a successful check with green OK tag """
     # pragma pylint: disable=C0209
     print(
@@ -43,7 +49,12 @@ def log_success(message: str, matcher: str = "", additional_message: str = "") -
     # pragma pylint: enable=C0209
 
 
-def log_failure(message: str, matcher: str = "", additional_message: str = "") -> None:
+def log_failure(
+        message: str,
+        matcher: str = "",
+        additional_message: str = "",
+        **_: Any
+) -> None:
     """ Log a failure with red FAILED tag """
     # pragma pylint: disable=C0209
     print(
@@ -56,10 +67,22 @@ def log_failure(message: str, matcher: str = "", additional_message: str = "") -
 
 
 def test_expectation(success: bool, **kwargs: Any) -> bool:
-    """ Wrapping automatic logging
+    """ Generic wrapper for automatic logging
 
-    :kwargs:    must match with parameters of the log functions
+    If `content` argument exists, it is logged in case of failure.
+
+    :kwargs:    forwarded to log functions, unknown arguments are discarded
     """
+
+    content = kwargs.get("content", "")
+    if content != "":
+        # TODO(observability): maybe multi-level verbosity
+        if kwargs.get("verbose", False) and not success:
+            msg = kwargs.get("additional_message", "")
+
+            if isinstance(content, bytes):
+                content = content.decode("utf-8")
+            kwargs["additional_message"] = f"{msg}\n{content}"
 
     if success:
         log_success(**kwargs)
@@ -68,22 +91,26 @@ def test_expectation(success: bool, **kwargs: Any) -> bool:
     return success
 
 
-def test_file_exceptation(
-        success: bool,
-        content: str,
-        verbose: bool = False,
-        **kwargs: Any
-) -> bool:
-    """ Wrapping automatic logging for file matchers
+def check_str(content: Union[str, bytes], matcher: Callable[[str], bool]) -> bool:
+    """ Check a string line-by-line with a customizable matcher
 
-    In case of failure, the content of the file is also logged
-
-    :kwargs:    must match with parameters of the log functions
+    Automatically decodes binary data (bytes) as UTF-8
     """
 
-    if verbose and not success:
-        kwargs["additional_message"] += content
-    return test_expectation(success, **kwargs)
+    if isinstance(content, bytes):
+        content = content.decode("utf-8")
+
+    return any(map(matcher, content.splitlines()))
+
+
+def readfile(path: str) -> str:
+    """ Reads a file as text from the given `path` """
+    try:
+        with open(path, "r", encoding="utf-8") as inf:
+            return inf.read()
+    except FileNotFoundError as ex:
+        log_failure(str(ex), "Exception")
+        return ""
 
 
 def exec_command(
